@@ -1,0 +1,12 @@
+{
+  "rubric": {
+    "LLM Integration & Prompt Engineering": "Seamless integration with OpenAI's API; well-crafted prompts ensure accurate and engaging responses. Handles various query types effectively.",
+    "Retrieval & Search Efficiency": "Efficiently retrieves the most relevant movie data using FAISS/vector search. Handles both title-based and descriptive queries accurately.",
+    "Conversational Flow & Query Handling": "Supports multi-turn conversations, follow-up queries, and context retention. Adapts to user input dynamically and refines responses.",
+    "Movie Data Representation & Formatting": "Displays movie details (title, genre, actors, ratings, descriptions) in a structured and user-friendly manner. Uses markdown formatting or a clean UI.",
+    "Handling of Edge Cases & Error Responses": "Gracefully handles invalid inputs, typos, or unsupported queries with informative messages instead of failing.",
+    "User Interface & Deployment (Gradio/Streamlit)": "Intuitive, well-designed chatbot interface with smooth interaction. Fast response times, clear buttons, and efficient user experience.",
+    "Code Structure & Documentation": "Clean, modular code with clear function descriptions, comments, and well-organized notebook sections. Easy to understand and extend.",
+    "Creativity & Feature Enhancement": "Implements advanced features like multi-agent workflows (e.g., separate agents for movie search, review analysis, and genre-based recommendations), trending movie suggestions, interactive quizzes, voice-based search, or multimodal input (text + images/video trailers). Enhances chatbot interactivity beyond simple queries."
+  }
+}
