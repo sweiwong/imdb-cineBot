@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-Last updated: 2026-03-08
+Last updated: 2026-03-11
 
 ---
 
@@ -21,49 +21,101 @@ Last updated: 2026-03-08
 ## Part 2: Embeddings & Vector Store — DONE
 
 - [x] Convert DataFrame rows to LangChain `Document` objects with rich metadata
-- [x] Chunk documents (RecursiveCharacterTextSplitter: 350 tokens, 40 overlap)
-- [x] Generate embeddings (OpenAI `text-embedding-3-small`)
-- [x] Build FAISS index from chunked documents
+- [x] Skip chunking (search_text median ~212 chars, all under 350 — chunking is no-op or harmful)
+- [x] Generate embeddings (OpenAI `text-embedding-3-small`, 1536 dims)
+- [x] Build FAISS index (2,762 vectors)
+- [x] Retrieval validation: 5 test queries (2 title-based, 3 descriptive)
 
-## Part 3: Retrieval & Reranking — DONE
+## Part 3: Retrieval & Reranking — NOT STARTED
 
-- [x] Semantic similarity retrieval (k=30 initial candidates)
-- [x] Constraint extraction (duration, rating, year, genre, certificate, actor, director, title)
-- [x] Preference profile extraction (mood, era, pacing)
-- [x] Filter hard constraints + rerank with soft preference scoring
-- [x] Debug panel: raw semantic vs. constraint-aware reranked results
+- [ ] Semantic similarity retrieval (k=30 initial candidates)
+- [ ] Constraint extraction (duration, rating, year, genre, certificate, actor, director, title)
+- [ ] Preference profile extraction (mood, era, pacing)
+- [ ] Filter hard constraints + rerank with soft preference scoring
+- [ ] Debug panel: raw semantic vs. constraint-aware reranked results
+- [ ] **Experiment: Retrieval k** — compare k=5 vs k=15 vs k=30 vs k=50 on same queries
 
-## Part 4: LLM Integration & Prompt Engineering — DONE
+## Part 4: LLM Integration & Prompt Engineering — NOT STARTED
 
-- [x] Initialize ChatOpenAI (gpt-4o-mini, temp=0.2)
-- [x] Design prompt template (system persona: movie concierge)
-- [x] Response structure: Quick Take → Why These Fit → Movies → Follow-up Question
-- [x] Chat history compression (last 6 turns)
-- [x] Query rewriting for better retrieval
+### Part 4a: Why RAG? (LLM-only vs RAG comparison)
 
-## Part 5: Multi-Agent Orchestration — DONE
+Opens Part 4 by demonstrating *why* the entire RAG architecture is needed. ~3 cells.
 
-- [x] Intent detection (search / recommendation / catalog)
-- [x] Four specialized agents with different retrieval and generation behaviors
-- [x] Dynamic routing via `orchestrate_agents()`
+Uses Ben Affleck as the test case — he's both a director and actor in our dataset, which forces the system to distinguish roles. Two queries:
+- **"What are the highest rated movies directed by Ben Affleck in this dataset?"**
+- **"What are the best movies where Ben Affleck is an actor, not director?"**
 
-## Part 6: Guardrails & Safety — DONE
+| Step | What happens | Expected outcome |
+|------|-------------|-----------------|
+| Naked LLM (no RAG) | Ask GPT-4o-mini directly, no context from our dataset | Answers from internet knowledge — may hallucinate titles not in our catalog, can't verify director vs actor role, doesn't know our dataset boundaries |
+| With RAG | Retrieve from FAISS first, pass results as context | Answers grounded in our actual 2,762 movies, with metadata to distinguish director vs star_cast |
 
-- [x] Movie-relatedness heuristic check
-- [x] Constraint compliance evaluation
-- [x] `safe_chatbot()` wrapper with error handling and timeouts
+**Teaching points this demonstrates:**
+- Hallucination risk without grounding
+- Catalog specificity — we want answers from *our* dataset, not all of IMDb
+- Role disambiguation — semantic search returns all Ben Affleck movies, but metadata distinguishes director vs actor (tees up Part 3 reranking)
 
-## Part 7: UI & Evaluation — DONE
+### Part 4c: Core LLM Pipeline
 
-- [x] Gradio `ChatInterface` with example queries and custom styling
-- [x] Evaluation harness with 6+ test cases (title lookup, constraints, follow-ups, edge cases)
-- [x] Automated scorecard (title hits, constraint compliance, follow-up quality)
+- [ ] Initialize ChatOpenAI (gpt-4o-mini, temp=0.2)
+- [ ] Design prompt template (system persona: movie concierge)
+- [ ] Response structure: Quick Take → Why These Fit → Movies → Follow-up Question
+- [ ] Chat history compression (last 6 turns)
+- [ ] Query rewriting for better retrieval
 
-## Part 8: LangGraph Refactor (Bonus) — DONE
+### Part 4b: Parameter Tuning & Ablation
 
-- [x] Extract notebook logic into `IMDbLangGraphApp` class (~950 lines)
-- [x] Implement as proper LangGraph `StateGraph` with typed state
-- [x] Node-based architecture: prepare → route → agent → finalize
+Dedicated subsection at the end of Part 4 to show engineering rigor. ~3-4 cells.
+
+**Must-include (high rubric impact):**
+- [ ] **Temperature comparison** — Run 3-4 queries at temp=0.0, 0.2, 0.5, 0.7. Compare response quality and consistency. Shows creativity-vs-consistency tradeoff. *(Rubric: LLM Integration & Prompt Engineering)*
+- [ ] **Prompt variations** — Test 2-3 system prompt versions (concise vs detailed persona vs structured output). Highest-leverage experiment for the rubric. *(Rubric: LLM Integration & Prompt Engineering)*
+- [ ] **Retrieval k** — Compare k=5 vs k=15 vs k=30 vs k=50. Too few = miss relevant movies, too many = flood LLM with noise. *(Rubric: Retrieval & Search Efficiency)*
+
+**Nice-to-have (impressive, moderate effort):**
+- [ ] **Context window size** — Send top-3 vs top-5 vs top-10 docs to LLM. More context = more info but higher cost and distraction risk. *(Rubric: LLM Integration & Prompt Engineering)*
+- [ ] **Model comparison** — `gpt-4o-mini` vs `gpt-4o` on same 3 queries. Compare quality, cost, latency. Deliberate model selection. *(Rubric: LLM Integration & Prompt Engineering, Creativity)*
+
+**Skip (not worth the effort):**
+- Embedding model comparison (`small` vs `large`) — requires re-embedding entire dataset twice
+- search_text format comparison (labeled vs unlabeled) — same re-embedding issue; markdown explanation is enough
+
+## Part 5: Multi-Agent Orchestration — NOT STARTED
+
+- [ ] Intent detection (search / recommendation / catalog)
+- [ ] Four specialized agents with different retrieval and generation behaviors
+- [ ] Dynamic routing via `orchestrate_agents()`
+
+## Part 6: Guardrails & Safety — NOT STARTED
+
+- [ ] Movie-relatedness heuristic check
+- [ ] Constraint compliance evaluation
+- [ ] `safe_chatbot()` wrapper with error handling and timeouts
+
+## Part 7: UI & Evaluation — NOT STARTED
+
+### Part 7a: Core UI
+- [ ] Gradio `ChatInterface` with example queries and custom styling
+- [ ] Movie poster images in responses (use `poster_src` URLs from metadata)
+- [ ] Evaluation harness with 6+ test cases (title lookup, constraints, follow-ups, edge cases)
+- [ ] Automated scorecard (title hits, constraint compliance, follow-up quality)
+
+### Part 7b: Multimodal Features *(Rubric: Creativity & Feature Enhancement)*
+
+These map directly to the rubric language: *"voice-based search, multimodal input (text + images/video trailers)"*
+
+- [ ] **Speech-to-text input** — Gradio `Audio` component + OpenAI Whisper API. User speaks a query, it gets transcribed, then fed into the same pipeline. ~15 lines. *(Rubric: Creativity)*
+- [ ] **Image upload → visual search** — Gradio `Image` upload + GPT-4o vision. User uploads a movie poster/screenshot → GPT-4o describes it → description becomes the search query → FAISS retrieves matches. ~25 lines. *(Rubric: Creativity, multimodal input)*
+- [ ] **Text-to-speech output** (optional) — OpenAI TTS API reads back the chatbot response. ~10 lines. Lower priority.
+
+**Skip:**
+- Video trailer lookup — requires YouTube Data API, adds key management complexity, low rubric value for the effort
+
+## Part 8: LangGraph Refactor (Bonus) — NOT STARTED
+
+- [ ] Extract notebook logic into `IMDbLangGraphApp` class (~950 lines)
+- [ ] Implement as proper LangGraph `StateGraph` with typed state
+- [ ] Node-based architecture: prepare → route → agent → finalize
 
 ---
 

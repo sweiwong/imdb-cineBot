@@ -16,30 +16,28 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 
 ## Current Progress — wei-wong.ipynb
 
-### Part 1: Data Understanding & Preparation — IN PROGRESS
-**Completed cells:**
-- Header cell (name, email, problem statement) ✓
-- Project Overview markdown ✓
-- Part 1 Objectives markdown ✓
-- Environment setup (Colab/local detection) ✓
-- Imports (re, numpy, pandas, matplotlib, seaborn) ✓
-- Load dataset (raw_df, 3173 rows × 10 cols) ✓
-- raw_df.info() and .isna().sum() ✓
-- Data quality snapshot function (duplicates, cast delimiter check) ✓
-- Duplicate inspection (exact dupes vs title-year collisions) ✓
-- Exact dedup → clean_df (2762 rows) ✓
-- movie_id creation (slugified title + year + suffix for collisions) ✓
-- EDA section heading markdown ✓
+### Part 1: Data Understanding & Preparation — COMPLETE
+- Header, Project Overview, Part 1 Objectives ✓
+- Environment setup, imports, dataset loading (3173 → 2762 after dedup) ✓
+- Data quality snapshot, duplicate inspection, exact dedup, movie_id ✓
+- Cast parsing (lowercase→uppercase split + particle merge for Di/Mc/etc.) ✓
+- Cast quality audit (reliable vs low-confidence flag) ✓
+- 6-panel EDA (ratings, years, genres, certificates, duration, directors) ✓
+- `search_text` feature (labeled format for embeddings) ✓
+- Keyword spot-checks (Spielberg, Nolan, Documentary, DiCaprio, 2020) ✓
+- Data integrity assertions (6 checks, all passing) ✓
+- Data contract summary for Part 2 ✓
 
-**Still needed for Part 1:**
-- [ ] Cast parsing (fix concatenated actor names — no delimiters in Star Cast)
-- [ ] 6 EDA visualizations (ratings, years, genres, certificates, duration, directors)
-- [ ] Build `search_text` feature (concatenated field for embedding)
-- [ ] Keyword filter spot-checks to validate search_text
-- [ ] Data integrity assertions (no dupes, unique IDs, no nulls in key fields)
-- [ ] Data contract summary markdown for Part 2
-
-### Part 2: Embeddings & Vector Store — NOT STARTED
+### Part 2: Embeddings & Vector Store — COMPLETE
+- Section header with business framing + objectives ✓
+- Install dependencies (langchain, faiss-cpu, etc.) ✓
+- Imports + API key loading (.env → Colab Secrets → error) ✓
+- Document construction explanation (chunking decision explained) ✓
+- `row_to_document()` + build 2,762 Documents with full metadata ✓
+- Embeddings explanation (text-embedding-3-small, 1536 dims) ✓
+- FAISS index construction (2,762 vectors) ✓
+- Retrieval validation: 5 test queries (2 title-based, 3 descriptive) ✓
+- Retrieval insights + Part 2 data contract for Part 3 ✓
 ### Part 3: Retrieval & Reranking — NOT STARTED
 ### Part 4: LLM Integration & Prompt Engineering — NOT STARTED
 ### Part 5: Multi-Agent Orchestration — NOT STARTED
