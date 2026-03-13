@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-Last updated: 2026-03-11
+Last updated: 2026-03-12
 
 ---
 
@@ -26,14 +26,17 @@ Last updated: 2026-03-11
 - [x] Build FAISS index (2,762 vectors)
 - [x] Retrieval validation: 5 test queries (2 title-based, 3 descriptive)
 
-## Part 3: Retrieval & Reranking — NOT STARTED
+## Part 3: Retrieval & Reranking — DONE
 
-- [ ] Semantic similarity retrieval (k=30 initial candidates)
-- [ ] Constraint extraction (duration, rating, year, genre, certificate, actor, director, title)
-- [ ] Preference profile extraction (mood, era, pacing)
-- [ ] Filter hard constraints + rerank with soft preference scoring
-- [ ] Debug panel: raw semantic vs. constraint-aware reranked results
-- [ ] **Experiment: Retrieval k** — compare k=5 vs k=15 vs k=30 vs k=50 on same queries
+- [x] Semantic similarity retrieval (k=30 initial candidates)
+- [x] Constraint extraction (duration, rating, year, decade, genre, certificate, actor)
+- [x] Preference profile extraction (mood, era, titles, directors, actors)
+- [x] Genre matching fix: split multi-genre strings into individual tokens for reliable matching
+- [x] Filter hard constraints + rerank with soft preference scoring (72/28 hybrid formula)
+- [x] Debug panel: raw semantic vs. constraint-aware reranked results (3 queries)
+- [x] Query rewriting (append preference hints before embedding)
+- [x] `run_retrieval_pipeline()` — full Part 3 orchestrator (no LLM)
+- [x] **Experiment: Retrieval k** — compare k=5 vs k=15 vs k=30 vs k=50 on same queries
 
 ## Part 4: LLM Integration & Prompt Engineering — NOT STARTED
 

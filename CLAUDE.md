@@ -38,7 +38,19 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 - FAISS index construction (2,762 vectors) ✓
 - Retrieval validation: 5 test queries (2 title-based, 3 descriptive) ✓
 - Retrieval insights + Part 2 data contract for Part 3 ✓
-### Part 3: Retrieval & Reranking — NOT STARTED
+### Part 3: Retrieval & Reranking — COMPLETE
+- Part 3 header with business framing + architecture diagram ✓
+- Imports, lookup tables (genre tokens, titles, directors, actors) ✓
+- Hard constraints vs soft preferences explanation ✓
+- `extract_query_constraints()` — 9 constraint types via regex (genre, cert, actor, rating, year, decade, duration) ✓
+- `extract_preference_profile()` — soft signals from query + chat history (titles, directors, moods, era) ✓
+- Reranking formula explanation (72% semantic + 28% bonuses) ✓
+- `rerank_with_constraints()` — hybrid scoring with hard filter + fallback ✓
+- Debug panel: raw semantic vs reranked side-by-side on 3 queries ✓
+- Query rewriting explanation (lightweight alternative to HyDE) ✓
+- `rewrite_query_for_retrieval()` + `run_retrieval_pipeline()` — full Part 3 orchestrator ✓
+- Retrieval k experiment (k=5/15/30/50 comparison) ✓
+- Part 3 summary + data contract for Part 4 ✓
 ### Part 4: LLM Integration & Prompt Engineering — NOT STARTED
 ### Part 5: Multi-Agent Orchestration — NOT STARTED
 ### Part 6: Guardrails & Safety — NOT STARTED
