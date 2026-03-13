@@ -45,8 +45,8 @@ Last updated: 2026-03-12
 Opens Part 4 by demonstrating *why* the entire RAG architecture is needed. ~3 cells.
 
 Uses Ben Affleck as the test case — he's both a director and actor in our dataset, which forces the system to distinguish roles. Two queries:
-- **"What are the highest rated movies directed by Ben Affleck in this dataset?"**
-- **"What are the best movies where Ben Affleck is an actor, not director?"**
+- **"What are the highest rated movies directed by Ben Affleck?"**
+- **"What are the top 5 Ben Affleck movies?"**
 
 | Step | What happens | Expected outcome |
 |------|-------------|-----------------|
