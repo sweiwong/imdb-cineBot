@@ -51,7 +51,14 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 - `rewrite_query_for_retrieval()` + `run_retrieval_pipeline()` — full Part 3 orchestrator ✓
 - Retrieval k experiment (k=5/15/30/50 comparison) ✓
 - Part 3 summary + data contract for Part 4 ✓
-### Part 4: LLM Integration & Prompt Engineering — NOT STARTED
+### Part 4: LLM Integration & Prompt Engineering — COMPLETE
+- LLM-only vs RAG comparison (Ben Affleck queries — hallucination vs grounding) ✓
+- `ChatPromptTemplate` with movie concierge persona + 4-part output structure ✓
+- `history_to_text()`, `docs_to_context()`, `generate_answer()` helpers ✓
+- Empty-docs edge case guard in `generate_answer()` ✓
+- Demo: 3 query types (title lookup, preference-based, follow-up with history) ✓
+- Ablation: temperature (0.0/0.2/0.5/0.7), prompt style (minimal/balanced/verbose), context window (3/5/10 docs) ✓
+- Part 4 summary + data contract for Part 5 ✓
 ### Part 5: Multi-Agent Orchestration — NOT STARTED
 ### Part 6: Guardrails & Safety — NOT STARTED
 ### Part 7: UI (Gradio) & Evaluation Harness — NOT STARTED

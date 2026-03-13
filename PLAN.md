@@ -38,48 +38,30 @@ Last updated: 2026-03-12
 - [x] `run_retrieval_pipeline()` — full Part 3 orchestrator (no LLM)
 - [x] **Experiment: Retrieval k** — compare k=5 vs k=15 vs k=30 vs k=50 on same queries
 
-## Part 4: LLM Integration & Prompt Engineering — NOT STARTED
+## Part 4: LLM Integration & Prompt Engineering — DONE
 
 ### Part 4a: Why RAG? (LLM-only vs RAG comparison)
 
-Opens Part 4 by demonstrating *why* the entire RAG architecture is needed. ~3 cells.
+- [x] Naked LLM vs RAG comparison using Ben Affleck queries (director vs actor role disambiguation)
+- [x] Side-by-side analysis: hallucination, catalog specificity, role disambiguation, verifiability
 
-Uses Ben Affleck as the test case — he's both a director and actor in our dataset, which forces the system to distinguish roles. Two queries:
-- **"What are the highest rated movies directed by Ben Affleck?"**
-- **"What are the top 5 Ben Affleck movies?"**
+### Part 4b: Core LLM Pipeline
 
-| Step | What happens | Expected outcome |
-|------|-------------|-----------------|
-| Naked LLM (no RAG) | Ask GPT-4o-mini directly, no context from our dataset | Answers from internet knowledge — may hallucinate titles not in our catalog, can't verify director vs actor role, doesn't know our dataset boundaries |
-| With RAG | Retrieve from FAISS first, pass results as context | Answers grounded in our actual 2,762 movies, with metadata to distinguish director vs star_cast |
+- [x] Initialize ChatOpenAI (gpt-4o-mini, temp=0.2)
+- [x] Design `ChatPromptTemplate` (system persona: movie concierge, 4-part output structure)
+- [x] `history_to_text()` — compress chat history (last 6 turns)
+- [x] `docs_to_context()` — format retrieved docs as numbered blocks with metadata
+- [x] `generate_answer()` — orchestrate prompt formatting + LLM call, with empty-docs guard
+- [x] Demo: 3 diverse queries (title lookup, preference-based, follow-up with simulated history)
 
-**Teaching points this demonstrates:**
-- Hallucination risk without grounding
-- Catalog specificity — we want answers from *our* dataset, not all of IMDb
-- Role disambiguation — semantic search returns all Ben Affleck movies, but metadata distinguishes director vs actor (tees up Part 3 reranking)
+### Part 4c: Parameter Tuning & Ablation
 
-### Part 4c: Core LLM Pipeline
+- [x] **Temperature comparison** — temp=0.0, 0.2, 0.5, 0.7 on action thriller query. Justified temp=0.2.
+- [x] **Prompt variations** — minimal vs balanced vs verbose (CinemaBot 3000). Balanced wins.
+- [x] **Context window size** — top-3 vs top-5 vs top-10 docs. Validated max_docs=5.
 
-- [ ] Initialize ChatOpenAI (gpt-4o-mini, temp=0.2)
-- [ ] Design prompt template (system persona: movie concierge)
-- [ ] Response structure: Quick Take → Why These Fit → Movies → Follow-up Question
-- [ ] Chat history compression (last 6 turns)
-- [ ] Query rewriting for better retrieval
-
-### Part 4b: Parameter Tuning & Ablation
-
-Dedicated subsection at the end of Part 4 to show engineering rigor. ~3-4 cells.
-
-**Must-include (high rubric impact):**
-- [ ] **Temperature comparison** — Run 3-4 queries at temp=0.0, 0.2, 0.5, 0.7. Compare response quality and consistency. Shows creativity-vs-consistency tradeoff. *(Rubric: LLM Integration & Prompt Engineering)*
-- [ ] **Prompt variations** — Test 2-3 system prompt versions (concise vs detailed persona vs structured output). Highest-leverage experiment for the rubric. *(Rubric: LLM Integration & Prompt Engineering)*
-- [ ] **Retrieval k** — Compare k=5 vs k=15 vs k=30 vs k=50. Too few = miss relevant movies, too many = flood LLM with noise. *(Rubric: Retrieval & Search Efficiency)*
-
-**Nice-to-have (impressive, moderate effort):**
-- [ ] **Context window size** — Send top-3 vs top-5 vs top-10 docs to LLM. More context = more info but higher cost and distraction risk. *(Rubric: LLM Integration & Prompt Engineering)*
-- [ ] **Model comparison** — `gpt-4o-mini` vs `gpt-4o` on same 3 queries. Compare quality, cost, latency. Deliberate model selection. *(Rubric: LLM Integration & Prompt Engineering, Creativity)*
-
-**Skip (not worth the effort):**
+**Skipped (not worth the effort):**
+- Model comparison (`gpt-4o-mini` vs `gpt-4o`) — cost difference is clear, quality delta marginal for this use case
 - Embedding model comparison (`small` vs `large`) — requires re-embedding entire dataset twice
 - search_text format comparison (labeled vs unlabeled) — same re-embedding issue; markdown explanation is enough
 
