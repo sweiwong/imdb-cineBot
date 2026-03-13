@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-Last updated: 2026-03-12
+Last updated: 2026-03-13
 
 ---
 
@@ -65,11 +65,18 @@ Last updated: 2026-03-12
 - Embedding model comparison (`small` vs `large`) — requires re-embedding entire dataset twice
 - search_text format comparison (labeled vs unlabeled) — same re-embedding issue; markdown explanation is enough
 
-## Part 5: Multi-Agent Orchestration — NOT STARTED
+## Part 5: Multi-Agent Orchestration — DONE
 
-- [ ] Intent detection (search / recommendation / catalog)
-- [ ] Four specialized agents with different retrieval and generation behaviors
-- [ ] Dynamic routing via `orchestrate_agents()`
+- [x] `run_chatbot_query()` — unified wrapper combining retrieval pipeline + LLM generation
+- [x] Five specialized agents: search, recommendation, catalog, clarification, fallback
+- [x] `fallback_agent()` — static off-topic handler (no retrieval/LLM cost); addresses Edge Cases rubric
+- [x] `detect_intent()` — rule-based keyword/regex classifier (catalog, recommendation, fallback, search)
+- [x] Greeting regex with `{0,2}` trailing words — catches "hey there!" but not "hey recommend a thriller"
+- [x] `orchestrate_agents()` — intent-first routing (fixed: greetings like "hi" checked before length guard)
+- [x] Demo: 7 queries across all 5 agents
+
+**Future enhancement (noted, not built):**
+- Fan-faves vs critically-acclaimed reranking (IMDb Rating vs MetaScore) — better as a Part 3 reranking enhancement
 
 ## Part 6: Guardrails & Safety — NOT STARTED
 

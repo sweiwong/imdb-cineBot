@@ -59,7 +59,15 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 - Demo: 3 query types (title lookup, preference-based, follow-up with history) ✓
 - Ablation: temperature (0.0/0.2/0.5/0.7), prompt style (minimal/balanced/verbose), context window (3/5/10 docs) ✓
 - Part 4 summary + data contract for Part 5 ✓
-### Part 5: Multi-Agent Orchestration — NOT STARTED
+### Part 5: Multi-Agent Orchestration — COMPLETE
+- Part 5 header with business framing + architecture diagram ✓
+- `run_chatbot_query()` — unified retrieval + generation wrapper (combines Parts 3 & 4) ✓
+- 5 specialized agents: search, recommendation, catalog, clarification, fallback ✓
+- `fallback_agent()` — handles off-topic/greetings without retrieval or LLM calls (Edge Cases rubric) ✓
+- `detect_intent()` — rule-based keyword/regex classifier with greeting detection ({0,2} trailing words) ✓
+- `orchestrate_agents()` — top-level router; intent-first ordering so "hi" routes to fallback, not clarification ✓
+- Demo: 7 queries routing to all 5 agents (search, recommendation, catalog, clarification, 2× fallback) ✓
+- Part 5 summary + data contract for Part 6 ✓
 ### Part 6: Guardrails & Safety — NOT STARTED
 ### Part 7: UI (Gradio) & Evaluation Harness — NOT STARTED
 
@@ -83,11 +91,12 @@ User Query → Intent Detection → Agent Routing → FAISS Retrieval (k=30)
 
 ### Multi-Agent Design
 
-Four agents routed by intent detection:
-- **search** — general movie discovery
+Five agents routed by intent detection:
+- **search** — general movie discovery (default)
 - **recommendation** — taste/preference-based suggestions
 - **catalog** — exhaustive filtered lists (e.g., "all Nolan films")
-- **clarification** — handles vague or ambiguous queries
+- **clarification** — handles ambiguous or too-short queries (< 3 chars)
+- **fallback** — handles off-topic queries (greetings, non-movie topics, meta-questions)
 
 ## Key Files
 
