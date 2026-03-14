@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-Last updated: 2026-03-13
+Last updated: 2026-03-14
 
 ---
 
@@ -78,11 +78,16 @@ Last updated: 2026-03-13
 **Future enhancement (noted, not built):**
 - Fan-faves vs critically-acclaimed reranking (IMDb Rating vs MetaScore) — better as a Part 3 reranking enhancement
 
-## Part 6: Guardrails & Safety — NOT STARTED
+## Part 6: Guardrails & Safety — DONE
 
-- [ ] Movie-relatedness heuristic check
-- [ ] Constraint compliance evaluation
-- [ ] `safe_chatbot()` wrapper with error handling and timeouts
+- [x] Defense-in-depth explanation (fallback_agent blocklist vs is_probably_movie_related allowlist)
+- [x] `is_probably_movie_related()` — 5-signal topic classifier (keywords, genres, certs, years, entities)
+- [x] `evaluate_constraint_compliance()` — post-hoc audit reusing hard-constraint extractors
+- [x] `safe_chatbot()` — 4-layer entry point (input validation → topic filter → agent pipeline → exception wrapper)
+- [x] `_gradio_history_to_tuples()` — boundary converter: Gradio dict-format → tuple pairs for downstream pipeline
+- [x] `safe_chatbot()` type hint updated to `list[dict] | list[tuple[str, str]] | None`
+- [x] Stress test: 9 queries covering all status paths (invalid_input, off_topic, ok + compliance, fallback)
+- [x] Multi-turn stress test: Gradio dict-format history + follow-up with preference profile assertion
 
 ## Part 7: UI & Evaluation — NOT STARTED
 

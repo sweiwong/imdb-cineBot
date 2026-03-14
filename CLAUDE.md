@@ -68,7 +68,17 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 - `orchestrate_agents()` — top-level router; intent-first ordering so "hi" routes to fallback, not clarification ✓
 - Demo: 7 queries routing to all 5 agents (search, recommendation, catalog, clarification, 2× fallback) ✓
 - Part 5 summary + data contract for Part 6 ✓
-### Part 6: Guardrails & Safety — NOT STARTED
+### Part 6: Guardrails & Safety — COMPLETE
+- Part 6 header with business framing + 4-layer architecture diagram ✓
+- Defense-in-depth explanation (fallback_agent blocklist vs is_probably_movie_related allowlist) ✓
+- `is_probably_movie_related()` — 5 signal checks (keywords, genres, certs, years, entities) ✓
+- `evaluate_constraint_compliance()` — post-hoc audit using existing hard-constraint helpers ✓
+- `safe_chatbot()` design explanation + status value documentation ✓
+- `safe_chatbot()` — 4-layer entry point (input validation → topic filter → agent pipeline → exception wrapper) ✓
+- `_gradio_history_to_tuples()` — boundary converter so Gradio dict-format history flows through tuple-based pipeline ✓
+- Stress test demo: 9 queries covering all status paths (invalid_input, off_topic, ok + compliance, fallback) ✓
+- Multi-turn stress test: Gradio dict-format history + follow-up query with preference profile assertion ✓
+- Part 6 summary + data contract for Part 7 ✓
 ### Part 7: UI (Gradio) & Evaluation Harness — NOT STARTED
 
 ## Architecture
