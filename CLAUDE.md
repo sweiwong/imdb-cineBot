@@ -79,7 +79,17 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 - Stress test demo: 9 queries covering all status paths (invalid_input, off_topic, ok + compliance, fallback) ✓
 - Multi-turn stress test: Gradio dict-format history + follow-up query with preference profile assertion ✓
 - Part 6 summary + data contract for Part 7 ✓
-### Part 7: UI (Gradio) & Evaluation Harness — NOT STARTED
+### Part 7: UI (Gradio) & Evaluation Harness — COMPLETE
+- Part 7 header with business framing + architecture diagram ✓
+- `format_movie_matches()`, `format_catalog_matches()`, `format_final_response()` — 3 formatting functions with poster thumbnails ✓
+- `gradio_chat_fn()` adapter + `gr.ChatInterface` with 4 example queries + CSS for poster sizing ✓
+- LLM prompt updated: conversational summary only (no movie lists — UI handles structured cards) ✓
+- `catalog_agent()` rewritten: bypasses FAISS, filters `clean_df` directly, sorts by IMDb rating desc, no LLM call ✓
+- Genre plural normalization in `extract_query_constraints()`: "documentaries" → "Documentary" etc. ✓
+- `EVAL_TEST_CASES` — 9 test cases (title lookup, 3× constraint, follow-up, typo, edge, off-topic, no-match) ✓
+- `_title_hit()`, `evaluate_single_case()`, `run_evaluation_harness()` — evaluation pipeline ✓
+- KPI summary: retrieval rate, first-answer success, compliance, follow-up resolution, fallback rate, latency p50/p95 ✓
+- Part 7 summary + full project summary across all 7 parts ✓
 
 ## Architecture
 
@@ -102,11 +112,11 @@ User Query → Intent Detection → Agent Routing → FAISS Retrieval (k=30)
 ### Multi-Agent Design
 
 Five agents routed by intent detection:
-- **search** — general movie discovery (default)
-- **recommendation** — taste/preference-based suggestions
-- **catalog** — exhaustive filtered lists (e.g., "all Nolan films")
-- **clarification** — handles ambiguous or too-short queries (< 3 chars)
-- **fallback** — handles off-topic queries (greetings, non-movie topics, meta-questions)
+- **search** — general movie discovery via FAISS semantic search + reranking + LLM (default)
+- **recommendation** — taste/preference-based via FAISS + preference-weighted reranking + LLM
+- **catalog** — exhaustive filtered lists via DataFrame filter (bypasses FAISS, no LLM), sorted by IMDb rating desc
+- **clarification** — handles ambiguous or too-short queries (< 3 chars), static response
+- **fallback** — handles off-topic queries (greetings, non-movie topics), static response
 
 ## Key Files
 

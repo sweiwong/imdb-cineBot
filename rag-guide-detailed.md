@@ -297,14 +297,14 @@ Instead of one monolithic pipeline, split responsibilities:
 
 ```
 User query → Router Agent (decides which specialist to call)
-  ├─ Search Agent:      Handles "find me movies about X"
-  ├─ Comparison Agent:  Handles "compare Movie A vs Movie B"
-  ├─ Recommendation Agent: Handles "suggest something based on my preferences"
-  ├─ Detail Agent:      Handles "tell me about [specific movie]"
-  └─ Quiz Agent:        Handles "test my movie knowledge" (creativity feature)
+  ├─ Search Agent:          "find me movies about X"      → FAISS semantic search + reranking + LLM
+  ├─ Recommendation Agent:  "suggest based on my taste"   → FAISS + preference-weighted reranking + LLM
+  ├─ Catalog Agent:         "give me all R-rated horror"  → DataFrame filter (no FAISS, no LLM)
+  ├─ Clarification Agent:   "..." (too short/vague)       → static prompt for more detail
+  └─ Fallback Agent:        greetings, off-topic          → static redirect (no API calls)
 ```
 
-Each agent has its own prompt template and retrieval strategy. The Router Agent is just an LLM call that classifies the query type and dispatches accordingly.
+Each agent has its own retrieval strategy. The key insight: **catalog bypasses FAISS entirely** because "give me all" queries need exhaustive structured filtering, not top-k semantic similarity. The catalog agent filters `clean_df` directly using the same constraint extractor, then sorts by IMDb rating descending. No LLM call — the results speak for themselves.
 
 ### Practical Implementation
 
@@ -440,4 +440,5 @@ User query
 4. **Re-ranking is cheap and high-impact.** Even simple heuristic boosts improve result quality.
 5. **Query rewriting is the bridge between conversational UX and search.** The LLM translates human intent into search-friendly form.
 6. **Multi-agent routing is the creativity differentiator.** It's what separates a chatbot from a search box.
-7. **Chunking doesn't apply to our structured dataset** — but understanding why is part of the learning.
+7. **Not every query needs vector search.** Catalog/filter queries should bypass FAISS and filter the DataFrame directly — "give me all" needs every match, not top-k semantic hits.
+8. **Chunking doesn't apply to our structured dataset** — but understanding why is part of the learning.

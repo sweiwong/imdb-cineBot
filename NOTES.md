@@ -114,17 +114,16 @@ Each node is a function that reads from and writes to a typed `GraphState` dicti
 
 ### The Prompt Structure
 
-My system prompt asks the LLM to respond with:
-1. **Quick Take** — One-line summary of what it found
-2. **Why These Fit** — Explain the connection to the user's request
-3. **Movies** — Structured details (title, year, genre, rating)
-4. **Follow-up Question** — Keep the conversation going
+The prompt evolved significantly. The initial version asked the LLM to output a 4-part structured response (Quick Take, Why These Fit, Movies, Follow-up). But once we added formatted movie cards in the UI (Part 7), the LLM was duplicating information — listing movies with ratings and runtimes that the UI already displayed in structured cards below.
+
+**Final approach:** The LLM writes *only* a conversational summary (3-5 sentences) explaining what was found and why the picks fit. No headers, no numbered sections, no movie lists. The UI handles all structured data display. This separation of concerns — LLM for narrative, UI for data — makes the output cleaner and avoids redundancy.
 
 ### What I Learned About Prompts
 
 - **Temperature 0.2** keeps responses focused. Higher temperatures gave creative but less reliable movie details.
 - **Providing `search_text` as context** (not raw data) means the LLM doesn't hallucinate movie facts — it can only reference what's in the retrieved documents.
 - **Chat history compression** (last 6 turns) prevents context overflow while maintaining conversational continuity.
+- **Tell the LLM what the UI does.** If the interface renders structured data, the prompt must say "don't repeat this" or the LLM will duplicate it. The prompt and UI are co-designed.
 
 ---
 
@@ -148,11 +147,13 @@ The `safe_chatbot()` wrapper catches exceptions and returns graceful error messa
 
 ### The Test Suite Approach
 
-I built an evaluation harness with test cases across categories:
-- Title lookup accuracy
-- Constraint satisfaction
-- Follow-up context retention
-- Edge case handling (vague queries, off-topic)
+I built an evaluation harness with 9 test cases across categories:
+- Title lookup accuracy (T1: Dune)
+- Constraint satisfaction (T2-T4: action/rating, documentary/duration, multi-constraint)
+- Follow-up context retention (T5: simulated chat history)
+- Typo resilience (T6: "cristopher noln")
+- Edge cases (T7: empty input, T9: impossible constraints → no_match)
+- Off-topic handling (T8: banana bread recipe)
 
 ### The Hard Part About Evaluating RAG
 
@@ -162,6 +163,10 @@ You can't just check "is the answer correct?" because:
 3. Follow-up handling is subjective
 
 My scorecard tracks concrete, measurable things: Did the right title appear? Were constraints satisfied? Did the system ask a reasonable follow-up? It's not perfect, but it's better than eyeballing.
+
+### What "Useful Retrieval" Actually Means
+
+The harness uses a binary hit metric — did at least one returned movie match the expected criteria? This is intentionally simple. A graded relevance score (NDCG, MRR) would be more rigorous, but requires manual relevance judgments for every query-movie pair. Binary hit is the right tradeoff for a case study: measurable, automatable, and honest about its limitations.
 
 ---
 
@@ -179,4 +184,44 @@ My scorecard tracks concrete, measurable things: Did the right title appear? Wer
 
 ---
 
-*More notes will be added as I continue refining the project.*
+## Part 7: The UI Changes Everything
+
+### Catalog Agent: FAISS Was the Wrong Tool
+
+The biggest Part 7 learning: catalog queries ("give me all documentaries rated 8+") are fundamentally different from search/recommendation queries. They need *every* matching row, not the top-k most semantically similar.
+
+FAISS caps at `candidate_k` vectors (30 in our case), so "give me all" could never return more than 30 results — and many valid matches were excluded because they weren't semantically closest. The fix was obvious in retrospect: **catalog bypasses FAISS entirely and filters the DataFrame directly** using the same constraint extractor from Part 3. Results sorted by IMDb rating descending. No LLM call needed.
+
+This is a pattern worth remembering: not every query in a RAG system needs vector search. Structured queries deserve structured retrieval.
+
+### Genre Plurals: A Dumb Bug That Broke Everything
+
+"Give me all documentaries rated 8.0 and above" returned 277 results instead of 46. The rating constraint *was* being extracted correctly (`imdb_min=8.0`). The bug: the genre regex `\bdocumentary\b` doesn't match "documentaries" because the plural form extends past the word boundary.
+
+Fix: two regex substitutions before genre matching — `ies` → `y` and trailing `s` → stripped. Simple, but it affected every plural genre query (comedies, thrillers, mysteries, biographies, musicals, fantasies, westerns).
+
+### Separation of Concerns: LLM vs UI
+
+The initial prompt asked the LLM to list movies with ratings and runtimes in a structured format. But the UI already renders movie cards with posters, metadata, and "why it fits" tags. The result was duplicate information — the LLM listing the same movies the UI was about to display.
+
+The fix: tell the LLM explicitly that the UI handles structured data, and its job is *only* conversational — a 1-2 sentence summary and a follow-up question. This made the output much cleaner.
+
+---
+
+## Key Takeaways (Updated)
+
+1. **RAG is a pipeline, not a model.** The LLM is one component. Data cleaning, embedding strategy, retrieval, reranking, and formatting do most of the heavy lifting.
+
+2. **Over-fetch then filter.** Retrieve more candidates than you need, then apply structured constraints. Pure semantic search can't enforce numerical or categorical conditions.
+
+3. **Intent detection enables specialization.** Different query types need different strategies. Routing is cheap; wrong answers are expensive.
+
+4. **Not every query needs vector search.** Catalog/filter queries should hit the DataFrame directly. FAISS is for fuzzy semantic matching, not exhaustive structured lookups.
+
+5. **The LLM and UI are co-designed.** If the UI renders structured data, the prompt must account for that or you get duplication. Separation of concerns applies to AI outputs too.
+
+6. **Evaluation is harder than building.** Defining "good" for a conversational system requires concrete, measurable criteria — not vibes.
+
+---
+
+*Last updated: 2026-03-14. All 7 parts complete.*

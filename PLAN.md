@@ -89,24 +89,28 @@ Last updated: 2026-03-14
 - [x] Stress test: 9 queries covering all status paths (invalid_input, off_topic, ok + compliance, fallback)
 - [x] Multi-turn stress test: Gradio dict-format history + follow-up with preference profile assertion
 
-## Part 7: UI & Evaluation — NOT STARTED
+## Part 7: UI & Evaluation — DONE
 
 ### Part 7a: Core UI
-- [ ] Gradio `ChatInterface` with example queries and custom styling
-- [ ] Movie poster images in responses (use `poster_src` URLs from metadata)
-- [ ] Evaluation harness with 6+ test cases (title lookup, constraints, follow-ups, edge cases)
-- [ ] Automated scorecard (title hits, constraint compliance, follow-up quality)
+- [x] Gradio `ChatInterface` with 4 example queries, placeholder text, custom CSS
+- [x] Movie poster thumbnails in responses (80px, floated left via CSS)
+- [x] Response formatting: `format_movie_matches()`, `format_catalog_matches()`, `format_final_response()`
+- [x] LLM prompt updated: conversational summary only (3-5 sentences), no movie lists — UI handles structured cards
+- [x] Catalog agent rewritten: bypasses FAISS, filters `clean_df` directly, sorts by IMDb rating desc, no LLM call
+- [x] Genre plural normalization: "documentaries" → "Documentary", "comedies" → "Comedy", etc.
+- [x] Evaluation harness: 9 test cases (title lookup, 3× constraint, follow-up, typo, edge/empty, off-topic, no-match)
+- [x] KPI summary: retrieval usefulness, first-answer success, constraint compliance, follow-up resolution, fallback rate, latency p50/p95
+- [x] Part 7 summary + full project summary across all 7 parts
 
 ### Part 7b: Multimodal Features *(Rubric: Creativity & Feature Enhancement)*
 
 These map directly to the rubric language: *"voice-based search, multimodal input (text + images/video trailers)"*
 
-- [ ] **Speech-to-text input** — Gradio `Audio` component + OpenAI Whisper API. User speaks a query, it gets transcribed, then fed into the same pipeline. ~15 lines. *(Rubric: Creativity)*
-- [ ] **Image upload → visual search** — Gradio `Image` upload + GPT-4o vision. User uploads a movie poster/screenshot → GPT-4o describes it → description becomes the search query → FAISS retrieves matches. ~25 lines. *(Rubric: Creativity, multimodal input)*
-- [ ] **Text-to-speech output** (optional) — OpenAI TTS API reads back the chatbot response. ~10 lines. Lower priority.
+**Deferred:** Multi-agent architecture + guardrails already satisfy Creativity rubric. Can add after core submission if time allows.
 
-**Skip:**
-- Video trailer lookup — requires YouTube Data API, adds key management complexity, low rubric value for the effort
+- [ ] **Speech-to-text input** — Gradio `Audio` component + OpenAI Whisper API. ~15 lines.
+- [ ] **Image upload → visual search** — Gradio `Image` upload + GPT-4o vision. ~25 lines.
+- [ ] **Text-to-speech output** (optional) — OpenAI TTS API. ~10 lines. Lowest priority.
 
 ## Part 8: LangGraph Refactor (Bonus) — NOT STARTED
 
@@ -133,7 +137,8 @@ These map directly to the rubric language: *"voice-based search, multimodal inpu
 | Embedding model | `text-embedding-3-small` | Fast, cheap, good enough for ~1000 movies |
 | LLM | `gpt-4o-mini` | Cost-effective for chatbot; temp=0.2 for consistency |
 | Vector store | FAISS (in-memory) | No infra needed; dataset fits in memory |
-| Chunk size | 350 tokens / 40 overlap | Movies are short documents; small chunks preserve specificity |
+| Chunk size | No chunking (median search_text ~212 chars) | Movies are single documents; chunking is no-op or harmful |
+| Catalog retrieval | DataFrame filter (not FAISS) | "Give me all" needs every match, not top-k semantic hits |
 | Initial retrieval k | 30 | Over-fetch then rerank — better precision after constraint filtering |
 | Framework | LangChain (notebook) + LangGraph (refactor) | LangChain for rapid prototyping; LangGraph shows production thinking |
 | UI | Gradio | Fastest path to demo-able chatbot; integrates with notebooks |
