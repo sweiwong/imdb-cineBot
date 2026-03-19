@@ -57,13 +57,13 @@ This pattern — over-fetch then filter — is how production RAG systems work. 
 
 ### Constraint Extraction
 
-I wrote regex-based parsers to pull structured constraints from natural language:
+Originally regex-based parsers pulling structured constraints from natural language:
 - "under 2 hours" → `duration_max: 120`
 - "rated above 8" → `min_rating: 8.0`
 - "from the 90s" → `year_min: 1990, year_max: 1999`
 - "PG-13" → `certificate: PG-13`
 
-This is brittle compared to using the LLM to extract constraints, but it's fast, deterministic, and debuggable. For a ~1000 movie dataset, it works well.
+These worked for literal patterns but failed on semantic language ("funny" ≠ "Comedy" to a regex). Now handled by `understand_query()` — the LLM maps natural language to structured constraints. The old regex extractors remain as fallbacks if the LLM call fails.
 
 ---
 
@@ -79,9 +79,17 @@ Different queries need different retrieval strategies:
 
 One-size-fits-all retrieval would underserve at least two of these. Intent detection lets me route each query to the right strategy.
 
-### Intent Detection
+### Intent Detection: From Regex to LLM
 
-I used keyword heuristics (not LLM-based classification) to detect intent. Fast, cheap, and good enough for the query patterns in this domain. Production systems might use a lightweight classifier, but for a case study, heuristics keep the architecture transparent.
+I initially used keyword heuristics to detect intent. Fast, cheap, transparent. But testing exposed two fatal flaws:
+1. **Natural language synonyms fail.** "Show me all Brad Pitt movies that are funny" — the regex couldn't map "funny" to Comedy genre because it only matched literal genre tokens.
+2. **Follow-ups are context-blind.** "Which of these are funny?" after a Brad Pitt query was flagged as off-topic because the regex topic filter had no chat history context. It just saw 5 words with no movie keywords.
+
+**The fix:** Replace three regex functions (`detect_intent`, `extract_query_constraints`, `is_probably_movie_related`) with a single `gpt-4o-mini` call (`understand_query()`) that sees the query + last 3 turns of chat history and returns structured JSON: intent, constraints, topic relevance, and a resolved query with pronouns/references expanded.
+
+**Cost:** ~$0.001 and ~300ms per query. Worth it. A fast wrong answer is worse than a slightly slower right one.
+
+**Lesson:** Regex-based NLP works for well-scoped keyword patterns. The moment you need semantic understanding or conversational context, you need an LLM. Don't fight the problem with more regexes.
 
 ---
 
@@ -224,4 +232,29 @@ The fix: tell the LLM explicitly that the UI handles structured data, and its jo
 
 ---
 
-*Last updated: 2026-03-14. All 7 parts complete.*
+## Part 8: LLM-Powered Orchestration — The Biggest Lesson
+
+### Regex is Brittle; LLMs Understand
+
+This was the most important refactor in the project. After completing all 7 parts, I started testing the chatbot with real queries and every single follow-up failed. The regex-based orchestration layer couldn't handle:
+- Semantic synonyms ("funny" → Comedy)
+- Follow-up references ("these", "that one") — no chat history context
+- Natural language intent that didn't match keyword patterns
+
+Replacing three regex functions with one LLM call (`understand_query()`) fixed all of this. The LLM sees the query + recent chat history and returns structured JSON with intent, constraints, and a resolved query. Cost: ~$0.001/query, ~300ms latency. Every penny worth it.
+
+### Data Quality Matters More Than You Think
+
+~815 movies (~30% of the dataset) had placeholder MetaScore (66.0) and Duration (116.3) values — unscraped fields filled with defaults. These movies were polluting recommendation results because FAISS ranked them by semantic similarity regardless of data quality. A -0.15 reranking penalty for placeholder rows and a 6.0 IMDb floor for recommendations cleaned this up.
+
+### Title Injection: When FAISS Isn't Enough
+
+Follow-up queries like "tell me about these 4" get resolved to specific movie titles by the LLM. But FAISS embeds the multi-title query as a single vector, so it might miss some titles. Direct title lookup from `TITLE_LOOKUP` supplements FAISS results — if the resolved query mentions known titles, inject them at distance 0.0.
+
+### Don't Recommend What They Already Know
+
+"I loved Inception and The Dark Knight — what should I watch next?" was returning Inception and The Dark Knight in the results. Fixed by excluding `mentioned_titles` (already tracked by `extract_preference_profile`) from recommendation results.
+
+---
+
+*Last updated: 2026-03-19. All 8 parts complete.*

@@ -91,11 +91,24 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 - KPI summary: retrieval rate, first-answer success, compliance, follow-up resolution, fallback rate, latency p50/p95 ✓
 - Part 7 summary + full project summary across all 7 parts ✓
 
+### Part 8: LLM-Powered Orchestration Rebuild — COMPLETE
+- `understand_query()` — single gpt-4o-mini call replacing regex detect_intent(), extract_query_constraints(), is_probably_movie_related() ✓
+- Returns structured JSON: resolved_query, intent, is_movie_related, constraints ✓
+- Resolves follow-up references using chat history ("these" → previous results, 800-char context window) ✓
+- Maps natural language to genres ("funny" → Comedy, "scary" → Horror) ✓
+- History-aware topic filtering (follow-ups in movie conversations aren't blocked) ✓
+- Old regex functions kept as fallbacks if LLM call fails ✓
+- Title injection in retrieval: exact title matches from resolved query supplement FAISS results ✓
+- Placeholder data penalty (-0.15) for movies with MetaScore=66.0 + Duration=116.3 (unscraped fields) ✓
+- IMDb 6.0 floor for recommendation mode ✓
+- Mentioned-title exclusion: "I loved Inception" won't recommend Inception back ✓
+- Broken poster fallback: onerror handler hides broken CDN images gracefully ✓
+
 ## Architecture
 
 ```
-User Query → Intent Detection → Agent Routing → FAISS Retrieval (k=30)
-  → Constraint Extraction & Reranking → LLM Generation (gpt-4o-mini)
+User Query → LLM Query Understanding (understand_query) → Agent Routing
+  → FAISS Retrieval (k=30) → Reranking → LLM Generation (gpt-4o-mini)
   → Formatted Response → Gradio UI
 ```
 

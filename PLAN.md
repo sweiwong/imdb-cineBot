@@ -112,7 +112,32 @@ These map directly to the rubric language: *"voice-based search, multimodal inpu
 - [ ] **Image upload → visual search** — Gradio `Image` upload + GPT-4o vision. ~25 lines.
 - [ ] **Text-to-speech output** (optional) — OpenAI TTS API. ~10 lines. Lowest priority.
 
-## Part 8: LangGraph Refactor (Bonus) — NOT STARTED
+## Part 8: LLM-Powered Orchestration Rebuild — DONE
+
+Replaces brittle regex-based intent detection, constraint extraction, and topic filtering with a single `gpt-4o-mini` call (`understand_query()`) that understands natural language, resolves follow-up references from chat history, and routes intelligently.
+
+**Motivation:** Testing revealed that regex-based `detect_intent()`, `extract_query_constraints()`, and `is_probably_movie_related()` fail on natural language ("funny" ≠ Comedy) and block valid follow-ups ("Which of these are funny?" flagged as off-topic because topic filter has no history context).
+
+- [x] `understand_query()` — single LLM call returning structured JSON: resolved_query, intent, is_movie_related, constraints
+- [x] Wire into pipeline: `safe_chatbot()`, `orchestrate_agents()`, `catalog_agent()`, `run_retrieval_pipeline()` consume LLM output
+- [x] Case-insensitive actor matching in `_doc_satisfies_hard_constraints()` (LLM returns proper names, not lookup keys)
+- [x] Type coercion for LLM-returned numeric constraints (string → float/int)
+- [x] Notebook narrative explaining architectural decision (regex → LLM, tradeoffs)
+- [x] Multi-turn stress test: Brad Pitt + follow-up scenario
+- [x] Title injection: exact title matches from resolved query supplement FAISS results for follow-ups
+- [x] Placeholder data penalty (-0.15) for MetaScore=66.0 + Duration=116.3 (unscraped fields, ~815 rows)
+- [x] IMDb 6.0 floor for recommendation mode
+- [x] Mentioned-title exclusion in recommendation mode ("I loved X" won't recommend X back)
+- [x] Broken poster fallback: `onerror` handler hides broken CDN images gracefully
+- [x] Gradio example prompts updated with tested queries
+
+**Detailed plan:** `docs/superpowers/plans/2026-03-19-llm-orchestration-rebuild.md`
+
+**What stays:** FAISS, reranking, generate_answer(), formatting, Gradio UI, 5 agent design
+**What's replaced:** `detect_intent()`, `extract_query_constraints()`, `is_probably_movie_related()` (kept as fallbacks)
+**What's modified:** `safe_chatbot()`, `orchestrate_agents()`, `catalog_agent()`, `run_retrieval_pipeline()`, `rerank_with_constraints()`, `_doc_satisfies_hard_constraints()`, formatting functions
+
+## Part 9: LangGraph Refactor (Bonus) — NOT STARTED
 
 - [ ] Extract notebook logic into `IMDbLangGraphApp` class (~950 lines)
 - [ ] Implement as proper LangGraph `StateGraph` with typed state
