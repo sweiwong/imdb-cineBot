@@ -86,28 +86,34 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 - LLM prompt updated: conversational summary only (no movie lists — UI handles structured cards) ✓
 - `catalog_agent()` rewritten: bypasses FAISS, filters `clean_df` directly, sorts by IMDb rating desc, no LLM call ✓
 - Genre plural normalization in `extract_query_constraints()`: "documentaries" → "Documentary" etc. ✓
-- `EVAL_TEST_CASES` — 9 test cases (title lookup, 3× constraint, follow-up, typo, edge, off-topic, no-match) ✓
+- `EVAL_TEST_CASES` — 15 test cases (title lookup, constraints, follow-up, typo, edge, off-topic, no-match, surname matching, mood recommendation, excluded titles) ✓
 - `_title_hit()`, `evaluate_single_case()`, `run_evaluation_harness()` — evaluation pipeline ✓
 - KPI summary: retrieval rate, first-answer success, compliance, follow-up resolution, fallback rate, latency p50/p95 ✓
 - Part 7 summary + full project summary across all 7 parts ✓
 
-### Part 8: LLM-Powered Orchestration Rebuild — COMPLETE
-- `understand_query()` — single gpt-4o-mini call replacing regex detect_intent(), extract_query_constraints(), is_probably_movie_related() ✓
-- Returns structured JSON: resolved_query, intent, is_movie_related, constraints ✓
+### Part 8: Hybrid Query Understanding — COMPLETE
+**Architecture pivot:** `understand_query()` simplified from full query analyzer to query rewriter only. LLM resolves follow-ups and checks topic relevance; regex stays as source of truth for intent detection (`detect_intent()`) and constraint extraction (`extract_query_constraints()`). This reduces regression risk from prompt drift.
+
+- `understand_query()` — gpt-4o-mini call returning resolved_query + is_movie_related only (no intent/constraints) ✓
 - Resolves follow-up references using chat history ("these" → previous results, 800-char context window) ✓
-- Maps natural language to genres ("funny" → Comedy, "scary" → Horror) ✓
 - History-aware topic filtering (follow-ups in movie conversations aren't blocked) ✓
-- Old regex functions kept as fallbacks if LLM call fails ✓
+- Fuzzy name matching: `_match_person_name()` — 3-pass resolution (exact → unique surname alias → typo recovery via difflib, cutoff 0.84) ✓
+- `DIRECTOR_LAST_NAME_LOOKUP` (1,594 surnames), `ACTOR_LAST_NAME_LOOKUP` (3,849 surnames) ✓
+- `extract_query_constraints()` rewritten to use `_match_person_name()` for director/actor ✓
+- `detect_intent()` enhanced: mood-first recommendation routing ("something suspenseful tonight") ✓
+- IMDb 7.0 floor for recommendation mode (raised from 6.0) ✓
 - Title injection in retrieval: exact title matches from resolved query supplement FAISS results ✓
 - Placeholder data penalty (-0.15) for movies with MetaScore=66.0 + Duration=116.3 (unscraped fields) ✓
-- IMDb 6.0 floor for recommendation mode ✓
 - Mentioned-title exclusion: "I loved Inception" won't recommend Inception back ✓
 - Broken poster fallback: onerror handler hides broken CDN images gracefully ✓
+- Evaluation harness expanded: 9 → 15 test cases (added surname matching, mood recommendation, catalog constraints, excluded titles) ✓
 
 ## Architecture
 
 ```
-User Query → LLM Query Understanding (understand_query) → Agent Routing
+User Query → LLM Query Rewriter (understand_query: resolve follow-ups, check topic)
+  → Regex Intent Detection (detect_intent) → Agent Routing
+  → Regex Constraint Extraction (extract_query_constraints) + Fuzzy Name Matching
   → FAISS Retrieval (k=30) → Reranking → LLM Generation (gpt-4o-mini)
   → Formatted Response → Gradio UI
 ```

@@ -18,19 +18,19 @@ This creates a whack-a-mole pattern: fixing one query's routing or reranking bre
 
 ### Current flow (all queries)
 
-```
+```text
 Query → FAISS (k=30) → Hard filter (remove non-compliant) → Rerank → Top 5
 ```
 
 ### New flow (when constraints detected)
 
-```
+```text
 Query → DataFrame filter (all compliant movies) → FAISS (k=full index) → Intersect by movie_id → Rerank → Top 5
 ```
 
 ### New flow (no constraints)
 
-```
+```text
 Query → FAISS (k=30) → Rerank → Top 5  (unchanged)
 ```
 
@@ -44,7 +44,7 @@ Query → FAISS (k=30) → Rerank → Top 5  (unchanged)
 1. Check for constraints using existing `_has_hard_constraints(constraints)` — note: `prefer_high_rating` alone does NOT trigger the constrained path (see below)
 2. **If constraints detected:**
    - Call `_filter_compliant_movie_ids(constraints)` to get the set of compliant movie_ids from `clean_df`
-   - Query FAISS with `k=vector_store.index.ntotal` (full index — trivially fast at this dataset size) to get semantic distance scores for every movie
+   - Query FAISS with `k=vector_store.index.ntotal` (full index — trivially fast at this dataset size) to get semantic distance scores for every movie. FAISS returns L2 distances (lower = better). The intersection preserves `(doc, distance)` tuples so the reranker's 72% semantic weight works correctly with the same `_semantic_similarity(distance)` conversion.
    - Keep only FAISS results whose `doc.metadata["movie_id"]` is in the compliant set
    - Title injection: if title-injected docs exist, they must also pass the compliance filter
    - Feed filtered `(doc, distance)` pairs into existing `rerank_with_constraints()`
@@ -57,16 +57,18 @@ Query → FAISS (k=30) → Rerank → Top 5  (unchanged)
 `prefer_high_rating` alone should NOT trigger the constrained path. "Best movies" doesn't need full DataFrame scanning — the reranker's rating bonus handles it fine. But `prefer_high_rating` combined with other constraints (genre, cert, etc.) should still apply the 7.0 floor during DataFrame filtering.
 
 Updated logic:
+
 - `_has_hard_constraints()` checks the standard hard keys (genre, certificate, actor, director, imdb_min/max, year_min/max, duration_min/max)
 - `prefer_high_rating` is applied as a filter within `_filter_compliant_movie_ids()` when other hard constraints are present, but does not by itself trigger the constrained path
 
 ### `_filter_compliant_movie_ids(constraints)` — new helper
 
 Build a boolean mask on `clean_df` checking each non-null constraint:
-- `genre`: case-insensitive substring match on Genre column
-- `certificate`: case-insensitive exact match on Certificates column
-- `actor_name`: case-insensitive match against `parsed_star_cast` list
-- `director_name`: case-insensitive substring match on Director column (consistent with genre matching)
+
+- `genre`: case-insensitive substring match on Genre column (e.g., "Action" matches "Action, Thriller")
+- `certificate`: normalized exact match — strip "Rated " prefix and "-rated" suffix from the constraint, then case-insensitive exact match against the Certificates column (e.g., "Rated R" or "r-rated" both match "R")
+- `actor_name`: case-insensitive exact match against `parsed_star_cast` list entries (not substring — "Brad Pitt" must match the full name, not a partial)
+- `director_name`: case-insensitive exact full-name match on Director column. `understand_query()` extracts full director names from the LLM, so exact match is appropriate. Substring would cause false positives (e.g., "Lee" matching "Spike Lee", "Ang Lee", and "Lee Daniels"; "Chris" matching "Christopher Nolan").
 - `imdb_min` / `imdb_max`: numeric range on IMDb Rating
 - `year_min` / `year_max`: numeric range on Year
 - `duration_min` / `duration_max`: numeric range on Duration (minutes)
@@ -74,7 +76,7 @@ Build a boolean mask on `clean_df` checking each non-null constraint:
 
 Returns: `Set[str]` of compliant movie_ids.
 
-Note: `catalog_agent()` should be updated to use this same helper for consistency (currently has its own inline filtering logic with exact match for director instead of substring).
+Note: `catalog_agent()` should be updated to use this same helper for consistency (currently has its own inline filtering logic).
 
 ### Constraints source
 
@@ -95,23 +97,27 @@ The constrained/unconstrained branch uses constraints from `understand_query()` 
 - `catalog_agent()` — pure DataFrame filter, returns all matches sorted by rating (will share the new `_filter_compliant_movie_ids` helper)
 - `rerank_with_constraints()` — still applies hybrid scoring (72% semantic + 28% bonuses)
 - `safe_chatbot()` — still ties it all together
+- `generate_answer()` and the LLM system prompt — unchanged
 - Gradio UI — unchanged
 - Fallback/clarification agents — unchanged
 
 ## Why This Works
 
 Intent classification accuracy matters much less. Whether "Best R-rated action thriller" routes to search, recommendation, or catalog:
+
 - **Catalog:** returns all matches sorted by rating (as today)
 - **Search/Recommendation:** finds all compliant movies via DataFrame, scores them semantically, returns top 5 most relevant — no movies lost
 
 ## Tradeoffs
 
 **Pros:**
+
 - Eliminates the entire class of "FAISS missed compliant movies" bugs
 - Any constraint combination works without per-query tuning
 - Minimal code change (one function, one new helper)
 
 **Cons:**
+
 - Slightly slower for constrained queries (FAISS k=full vs k=30) — negligible at this dataset size
 - Less semantic "surprise" — a PG-13 movie that's a perfect vibe match for an R-rated query gets filtered out. But that's what the user asked for.
 - Unconstrained queries ("something dark and atmospheric") unchanged — still use FAISS k=30, which is where FAISS excels
@@ -119,8 +125,8 @@ Intent classification accuracy matters much less. Whether "Best R-rated action t
 ## Files Modified
 
 | File | Change |
-|------|--------|
-| `wei-wong.ipynb` — reranking helpers cell | Add `_filter_compliant_movie_ids(constraints)` helper; update `_has_hard_constraints()` to exclude `prefer_high_rating` alone |
+| ---- | ------ |
+| `wei-wong.ipynb` — reranking helpers cell | Add `_filter_compliant_movie_ids(constraints)` helper; revert `_has_hard_constraints()` so `prefer_high_rating` alone does not trigger constrained path |
 | `wei-wong.ipynb` — `run_retrieval_pipeline()` cell | Add DataFrame pre-filtering branch using the new helper |
 | `wei-wong.ipynb` — `catalog_agent()` cell | Refactor to use shared `_filter_compliant_movie_ids()` helper |
 | `wei-wong.ipynb` — debug panel cell (if exists) | Update debug output to reflect constrained vs unconstrained path |

@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-Last updated: 2026-03-14
+Last updated: 2026-03-20
 
 ---
 
@@ -98,7 +98,7 @@ Last updated: 2026-03-14
 - [x] LLM prompt updated: conversational summary only (3-5 sentences), no movie lists — UI handles structured cards
 - [x] Catalog agent rewritten: bypasses FAISS, filters `clean_df` directly, sorts by IMDb rating desc, no LLM call
 - [x] Genre plural normalization: "documentaries" → "Documentary", "comedies" → "Comedy", etc.
-- [x] Evaluation harness: 9 test cases (title lookup, 3× constraint, follow-up, typo, edge/empty, off-topic, no-match)
+- [x] Evaluation harness: 15 test cases (title lookup, constraints, follow-up, typo, edge, off-topic, no-match, surname matching, mood recommendation, catalog constraints, excluded titles)
 - [x] KPI summary: retrieval usefulness, first-answer success, constraint compliance, follow-up resolution, fallback rate, latency p50/p95
 - [x] Part 7 summary + full project summary across all 7 parts
 
@@ -112,30 +112,39 @@ These map directly to the rubric language: *"voice-based search, multimodal inpu
 - [ ] **Image upload → visual search** — Gradio `Image` upload + GPT-4o vision. ~25 lines.
 - [ ] **Text-to-speech output** (optional) — OpenAI TTS API. ~10 lines. Lowest priority.
 
-## Part 8: LLM-Powered Orchestration Rebuild — DONE
+## Part 8: Hybrid Query Understanding — DONE
 
-Replaces brittle regex-based intent detection, constraint extraction, and topic filtering with a single `gpt-4o-mini` call (`understand_query()`) that understands natural language, resolves follow-up references from chat history, and routes intelligently.
+**Architecture pivot:** Originally planned to replace all regex with a single LLM call. After testing, pivoted to a hybrid approach: LLM handles query rewriting (follow-up resolution, topic relevance), regex stays as source of truth for intent detection and constraint extraction. This reduces regression risk from prompt drift while getting LLM benefits where they matter most.
 
-**Motivation:** Testing revealed that regex-based `detect_intent()`, `extract_query_constraints()`, and `is_probably_movie_related()` fail on natural language ("funny" ≠ Comedy) and block valid follow-ups ("Which of these are funny?" flagged as off-topic because topic filter has no history context).
+**Motivation:** Testing revealed follow-up queries failing (no chat history context in regex) and natural language synonyms missed ("funny" ≠ Comedy). But full LLM replacement introduced its own regressions — LLM intent/constraint extraction was less predictable than regex for well-structured queries.
 
+### Phase 1: LLM orchestration (initial)
 - [x] `understand_query()` — single LLM call returning structured JSON: resolved_query, intent, is_movie_related, constraints
 - [x] Wire into pipeline: `safe_chatbot()`, `orchestrate_agents()`, `catalog_agent()`, `run_retrieval_pipeline()` consume LLM output
-- [x] Case-insensitive actor matching in `_doc_satisfies_hard_constraints()` (LLM returns proper names, not lookup keys)
-- [x] Type coercion for LLM-returned numeric constraints (string → float/int)
-- [x] Notebook narrative explaining architectural decision (regex → LLM, tradeoffs)
-- [x] Multi-turn stress test: Brad Pitt + follow-up scenario
-- [x] Title injection: exact title matches from resolved query supplement FAISS results for follow-ups
-- [x] Placeholder data penalty (-0.15) for MetaScore=66.0 + Duration=116.3 (unscraped fields, ~815 rows)
-- [x] IMDb 6.0 floor for recommendation mode
-- [x] Mentioned-title exclusion in recommendation mode ("I loved X" won't recommend X back)
-- [x] Broken poster fallback: `onerror` handler hides broken CDN images gracefully
-- [x] Gradio example prompts updated with tested queries
+- [x] Title injection: exact title matches from resolved query supplement FAISS results
+- [x] Placeholder data penalty (-0.15) for MetaScore=66.0 + Duration=116.3 (~815 rows)
+- [x] Mentioned-title exclusion in recommendation mode
+- [x] Broken poster fallback: `onerror` handler hides broken CDN images
+
+### Phase 2: Hybrid pivot (current)
+- [x] Simplify `understand_query()` to query rewriter only (resolved_query + is_movie_related)
+- [x] Restore regex `detect_intent()` as primary intent classifier
+- [x] Restore regex `extract_query_constraints()` as primary constraint extractor
+- [x] Fuzzy name matching: `_match_person_name()` — 3-pass (exact → surname alias → typo recovery, difflib cutoff 0.84)
+- [x] `_build_unique_last_name_lookup()` — surname-to-full-name aliases (1,594 directors, 3,849 actors)
+- [x] `extract_query_constraints()` rewritten to use `_match_person_name()` for director/actor
+- [x] `detect_intent()` enhanced: mood-first recommendation routing ("something suspenseful tonight")
+- [x] `extract_preference_profile()` — fallback to `_match_person_name()`, added "suspenseful" mood
+- [x] IMDb 7.0 floor for recommendation mode (raised from 6.0)
+- [x] Evaluation harness expanded: 9 → 15 test cases (surname matching, mood recommendation, catalog constraints, excluded titles)
+- [x] Bug fix: "R-rated" no longer false-matches actor "R."
 
 **Detailed plan:** `docs/superpowers/plans/2026-03-19-llm-orchestration-rebuild.md`
 
 **What stays:** FAISS, reranking, generate_answer(), formatting, Gradio UI, 5 agent design
-**What's replaced:** `detect_intent()`, `extract_query_constraints()`, `is_probably_movie_related()` (kept as fallbacks)
-**What's modified:** `safe_chatbot()`, `orchestrate_agents()`, `catalog_agent()`, `run_retrieval_pipeline()`, `rerank_with_constraints()`, `_doc_satisfies_hard_constraints()`, formatting functions
+**LLM role:** Query rewriting (follow-up resolution) + topic relevance check only
+**Regex role:** Intent detection, constraint extraction, preference profiling (primary)
+**What's new:** Fuzzy name matching infrastructure (surname aliases + typo recovery)
 
 ## Part 9: LangGraph Refactor (Bonus) — NOT STARTED
 

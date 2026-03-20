@@ -257,4 +257,32 @@ Follow-up queries like "tell me about these 4" get resolved to specific movie ti
 
 ---
 
-*Last updated: 2026-03-19. All 8 parts complete.*
+## The Hybrid Pivot: LLM + Regex Is Better Than Either Alone
+
+### Why Full LLM Replacement Didn't Work
+
+Part 8 originally replaced all three regex functions (`detect_intent`, `extract_query_constraints`, `is_probably_movie_related`) with a single LLM call. The idea: one `gpt-4o-mini` call understands everything — intent, constraints, topic relevance, follow-up resolution.
+
+In practice, the LLM was great at some things and unreliable at others:
+- **Great at:** Resolving follow-up references ("these" → previous movies), understanding that a follow-up in a movie conversation is still movie-related
+- **Unreliable at:** Consistent intent classification (sometimes mapped the same query to different intents), constraint extraction (occasionally missed explicit constraints or hallucinated them)
+
+Regex is the opposite: it can't understand context or synonyms, but it's 100% deterministic. "Show me all R-rated action movies" will *always* extract `{certificate: "R", genre: "Action"}`.
+
+### The Hybrid Architecture
+
+**LLM does what it's uniquely good at:** Resolve follow-up references using chat history, check if a query is movie-related (with context awareness).
+
+**Regex does what it's reliable at:** Intent classification (keyword matching), constraint extraction (pattern matching), preference profiling.
+
+**Fuzzy name matching bridges the gap:** The one area where regex was genuinely failing — name recognition — got a dedicated solution. `_match_person_name()` does 3-pass resolution: exact match → unique surname alias → typo recovery (difflib, cutoff 0.84). This handles "Scorsese" → "Martin Scorsese" and "cristopher noln" → "Christopher Nolan" without any LLM calls.
+
+### The Lesson
+
+Don't replace a working deterministic system with an LLM just because the LLM *can* do it. Use LLMs for tasks that require understanding (ambiguity resolution, context awareness). Use deterministic code for tasks that require reliability (structured extraction, routing). The best systems are hybrids.
+
+This is the same principle as RAG itself: don't ask the LLM to know facts — retrieve them deterministically and let the LLM synthesize.
+
+---
+
+*Last updated: 2026-03-20. All 8 parts complete. Hybrid query understanding architecture finalized.*
