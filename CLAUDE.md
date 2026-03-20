@@ -75,6 +75,7 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 - `evaluate_constraint_compliance()` — post-hoc audit using existing hard-constraint helpers ✓
 - `safe_chatbot()` design explanation + status value documentation ✓
 - `safe_chatbot()` — 4-layer entry point (input validation → topic filter → agent pipeline → exception wrapper) ✓
+- `_is_ranking_followup()` — detects ranking/comparison follow-ups; sets `suppress_movie_section` so answer-only (no result grid) ✓
 - `_gradio_history_to_tuples()` — boundary converter so Gradio dict-format history flows through tuple-based pipeline ✓
 - Stress test demo: 9 queries covering all status paths (invalid_input, off_topic, ok + compliance, fallback) ✓
 - Multi-turn stress test: Gradio dict-format history + follow-up query with preference profile assertion ✓
@@ -107,6 +108,8 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 - Mentioned-title exclusion: "I loved Inception" won't recommend Inception back ✓
 - Broken poster fallback: onerror handler hides broken CDN images gracefully ✓
 - Evaluation harness expanded: 9 → 15 test cases (added surname matching, mood recommendation, catalog constraints, excluded titles) ✓
+- `format_final_response()` respects `suppress_movie_section` — ranking follow-ups return prose only, recommendation follow-ups still render cards ✓
+- Part 8 write-up: synthetic_description enrichment documented as future enhancement (not implemented) ✓
 
 ## Architecture
 

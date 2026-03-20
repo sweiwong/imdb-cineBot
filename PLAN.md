@@ -126,7 +126,7 @@ These map directly to the rubric language: *"voice-based search, multimodal inpu
 - [x] Mentioned-title exclusion in recommendation mode
 - [x] Broken poster fallback: `onerror` handler hides broken CDN images
 
-### Phase 2: Hybrid pivot (current)
+### Phase 2: Hybrid pivot
 - [x] Simplify `understand_query()` to query rewriter only (resolved_query + is_movie_related)
 - [x] Restore regex `detect_intent()` as primary intent classifier
 - [x] Restore regex `extract_query_constraints()` as primary constraint extractor
@@ -138,6 +138,13 @@ These map directly to the rubric language: *"voice-based search, multimodal inpu
 - [x] IMDb 7.0 floor for recommendation mode (raised from 6.0)
 - [x] Evaluation harness expanded: 9 → 15 test cases (surname matching, mood recommendation, catalog constraints, excluded titles)
 - [x] Bug fix: "R-rated" no longer false-matches actor "R."
+
+### Phase 3: Follow-up UX refinement
+- [x] `_is_ranking_followup()` — detects ranking/comparison follow-ups ("Which is the most original?")
+- [x] `safe_chatbot()` sets `suppress_movie_section` flag for answer-only follow-ups
+- [x] `format_final_response()` respects flag: ranking follow-ups → prose only, recommendation follow-ups → fresh cards
+- [x] Part 7 summary updated: evaluation harness is 15-case suite
+- [x] Part 8 write-up: synthetic_description enrichment documented as future enhancement
 
 **Detailed plan:** `docs/superpowers/plans/2026-03-19-llm-orchestration-rebuild.md`
 
