@@ -92,7 +92,7 @@ Last updated: 2026-03-20
 ## Part 7: UI & Evaluation — DONE
 
 ### Part 7a: Core UI
-- [x] Gradio `ChatInterface` with 4 example queries, placeholder text, custom CSS
+- [x] Gradio UI with 4 example queries, shared conversation history, and poster-rich responses
 - [x] Movie poster thumbnails in responses (80px, floated left via CSS)
 - [x] Response formatting: `format_movie_matches()`, `format_catalog_matches()`, `format_final_response()`
 - [x] LLM prompt updated: conversational summary only (3-5 sentences), no movie lists — UI handles structured cards
@@ -106,9 +106,7 @@ Last updated: 2026-03-20
 
 These map directly to the rubric language: *"voice-based search, multimodal input (text + images/video trailers)"*
 
-**Deferred:** Multi-agent architecture + guardrails already satisfy Creativity rubric. Can add after core submission if time allows.
-
-- [ ] **Speech-to-text input** — Gradio `Audio` component + OpenAI Whisper API. ~15 lines.
+- [x] **Speech-to-text input** — Gradio `Audio` microphone input + OpenAI `gpt-4o-mini-transcribe`, routed into the existing chatbot pipeline with transcript preview
 - [ ] **Image upload → visual search** — Gradio `Image` upload + GPT-4o vision. ~25 lines.
 - [ ] **Text-to-speech output** (optional) — OpenAI TTS API. ~10 lines. Lowest priority.
 

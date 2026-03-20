@@ -41,7 +41,7 @@ Raw `imdb_dataset.csv` (3173 rows) → dedup (2762 unique movies) → cast parsi
 ### RAG Pipeline (Part 3–4)
 
 ```
-User query
+User input (typed text or voice → gpt-4o-mini-transcribe)
   → LLM query rewriter (understand_query: resolve follow-ups, check topic relevance)
   → regex intent detection (detect_intent)
   → regex constraint extraction (extract_query_constraints + fuzzy name matching)
@@ -70,7 +70,7 @@ Catalog intentionally bypasses FAISS because "give me all X" queries need every 
 
 ### Gradio UI (Part 7)
 
-`gr.ChatInterface` with movie poster thumbnails (80px CSS), 4 example queries, and structured movie cards. The LLM writes only a conversational summary (3–5 sentences) — the UI renders all structured data. `format_movie_matches()`, `format_catalog_matches()`, `format_final_response()` handle display.
+`gr.Blocks` two-column layout: left panel is the chatbot (700px), right panel has tabbed input (Type tab with textbox, Voice tab with microphone + transcript preview). Voice input uses `gpt-4o-mini-transcribe` with a movie-domain transcription prompt, then feeds the transcript through the same `gradio_chat_fn()` → `safe_chatbot()` → `format_final_response()` path as typed text. The LLM writes only a conversational summary (3–5 sentences) — the UI renders all structured data via `format_movie_matches()`, `format_catalog_matches()`, `format_final_response()`.
 
 ### LangGraph Refactor (`imdb_langgraph_app.py`)
 

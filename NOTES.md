@@ -285,4 +285,26 @@ This is the same principle as RAG itself: don't ask the LLM to know facts — re
 
 ---
 
-*Last updated: 2026-03-20. All 8 parts complete. Hybrid query understanding architecture finalized.*
+## Speech-to-Text: Adding Voice Without Touching the Brain
+
+### The Adapter Pattern
+
+Adding voice search was surprisingly clean because of one decision: treat it as an input adapter, not a pipeline change. The audio goes through `gpt-4o-mini-transcribe` → transcript string → the exact same `safe_chatbot()` path as typed text. Every retrieval, guardrail, and follow-up feature works automatically because voice is just another way to produce a text query.
+
+### Domain-Specific Transcription Prompts
+
+The transcription model doesn't know it's being used for a movie chatbot. Without guidance, it might flatten proper nouns or mishear genre terms. A short domain prompt ("expect movie titles, actor names, directors, genres, ratings, years, and runtimes") measurably improves accuracy on names like "Scorsese" or "Tarantino."
+
+### Gradio UI Rebuild
+
+The bigger change was migrating from `gr.ChatInterface` (a single convenience widget) to `gr.Blocks` (a layout framework). `ChatInterface` doesn't support a secondary input modality — you can't bolt a microphone onto it. `Blocks` let me build a two-column layout: chat on the left, tabbed input (Type / Voice) on the right, with a transcript preview so users can see what the microphone heard before the query runs.
+
+**Lesson:** Start with the simplest UI abstraction that works (`ChatInterface`). When the feature requirements outgrow it, you'll know exactly what you need from the lower-level framework (`Blocks`) because you've already built the logic.
+
+### Follow-Up UX: Not Every Response Needs a Grid
+
+A small but meaningful UX fix: "Which of these is the most original?" after a recommendation list was rendering a fresh movie grid underneath the answer. The user didn't ask for new recommendations — they asked to *compare* the existing ones. `_is_ranking_followup()` detects this and sets `suppress_movie_section`, so the response is prose-only. Recommendation-style follow-ups ("recommend me something darker") still get fresh cards.
+
+---
+
+*Last updated: 2026-03-20. All 8 parts complete. Voice search added, Gradio UI rebuilt.*

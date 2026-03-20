@@ -83,7 +83,10 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 ### Part 7: UI (Gradio) & Evaluation Harness — COMPLETE
 - Part 7 header with business framing + architecture diagram ✓
 - `format_movie_matches()`, `format_catalog_matches()`, `format_final_response()` — 3 formatting functions with poster thumbnails ✓
-- `gradio_chat_fn()` adapter + `gr.ChatInterface` with 4 example queries + CSS for poster sizing ✓
+- Gradio `Blocks` UI: two-column layout (chat + tabbed input panel with Type/Voice tabs) ✓
+- `gradio_chat_fn()` adapter, `submit_text_turn()`, `submit_voice_turn()`, `clear_demo()` event handlers ✓
+- `transcribe_audio_to_text()` — OpenAI `gpt-4o-mini-transcribe` with movie-domain transcription prompt ✓
+- Transcript preview: voice input shows what was heard before sending to pipeline ✓
 - LLM prompt updated: conversational summary only (no movie lists — UI handles structured cards) ✓
 - `catalog_agent()` rewritten: bypasses FAISS, filters `clean_df` directly, sorts by IMDb rating desc, no LLM call ✓
 - Genre plural normalization in `extract_query_constraints()`: "documentaries" → "Documentary" etc. ✓
@@ -114,11 +117,12 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 ## Architecture
 
 ```
-User Query → LLM Query Rewriter (understand_query: resolve follow-ups, check topic)
+User Input (typed text or voice → gpt-4o-mini-transcribe)
+  → LLM Query Rewriter (understand_query: resolve follow-ups, check topic)
   → Regex Intent Detection (detect_intent) → Agent Routing
   → Regex Constraint Extraction (extract_query_constraints) + Fuzzy Name Matching
   → FAISS Retrieval (k=30) → Reranking → LLM Generation (gpt-4o-mini)
-  → Formatted Response → Gradio UI
+  → Formatted Response → Gradio Blocks UI
 ```
 
 ### Key Components
