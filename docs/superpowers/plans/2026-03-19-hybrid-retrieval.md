@@ -1,7 +1,5 @@
 # Hybrid Retrieval Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Make constrained search/recommendation queries find ALL compliant movies by pre-filtering the DataFrame before FAISS scoring, eliminating the k=30 bottleneck.
 
 **Architecture:** When `run_retrieval_pipeline()` detects hard constraints, it first filters `clean_df` to get compliant movie_ids, then queries FAISS with k=full-index, intersects by movie_id, and feeds compliant candidates into the existing reranker. Unconstrained queries use the existing FAISS k=30 path unchanged.
@@ -9,6 +7,30 @@
 **Tech Stack:** pandas (DataFrame filtering), FAISS (semantic scoring), LangChain (Document objects), existing notebook infrastructure
 
 **Spec:** `docs/superpowers/specs/2026-03-19-hybrid-retrieval-design.md`
+
+---
+
+## Status Update — 2026-03-21
+
+This plan is now implemented in `wei-wong.ipynb`.
+
+### Completed
+
+- `_normalize_certificate()`, `_has_hard_constraints()`, `_doc_satisfies_hard_constraints()`, and `_filter_compliant_movie_ids()` are in place
+- `run_retrieval_pipeline()` uses the constrained hybrid branch for hard-filtered queries and keeps the original FAISS `k=30` path for unconstrained queries
+- `catalog_agent()` reuses `_filter_compliant_movie_ids()` so catalog and search modes apply the same hard-constraint logic
+
+### Validation Notes
+
+- Hard-constrained zero-hit queries now correctly return no matches when the dataset truly has none
+- Example: `Best PG-13 sci-fi movies rated above 8.0` has zero exact matches in this catalog, so the retrieval logic is behaving correctly
+- To make that case feel better in the UI, `safe_chatbot()` now suggests nearby relaxations instead of stopping at a generic no-match message
+
+### What This Means
+
+The hybrid retrieval work is effectively complete. The next highest-value
+feature is the interactive quiz, while any further retrieval work should focus
+on descriptive-query quality rather than constrained-query coverage.
 
 ---
 
