@@ -69,12 +69,12 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 - Demo: 7 queries routing to all 5 agents (search, recommendation, catalog, clarification, 2× fallback) ✓
 - Part 5 summary + data contract for Part 6 ✓
 ### Part 6: Guardrails & Safety — COMPLETE
-- Part 6 header with business framing + 4-layer architecture diagram ✓
+- Part 6 header with business framing + 6-layer architecture diagram ✓
 - Defense-in-depth explanation (fallback_agent blocklist vs is_probably_movie_related allowlist) ✓
 - `is_probably_movie_related()` — 5 signal checks (keywords, genres, certs, years, entities) ✓
 - `evaluate_constraint_compliance()` — post-hoc audit using existing hard-constraint helpers ✓
 - `safe_chatbot()` design explanation + status value documentation ✓
-- `safe_chatbot()` — 4-layer entry point (input validation → topic filter → agent pipeline → exception wrapper) ✓
+- `safe_chatbot()` — 6-layer entry point (input validation → greeting short-circuit → history normalization → LLM query rewriting → deterministic guards → agent pipeline + exception wrapper) ✓
 - `_is_ranking_followup()` — detects ranking/comparison follow-ups; sets `suppress_movie_section` so answer-only (no result grid) ✓
 - `_gradio_history_to_tuples()` — boundary converter so Gradio dict-format history flows through tuple-based pipeline ✓
 - Stress test demo: 9 queries covering all status paths (invalid_input, off_topic, ok + compliance, fallback) ✓
@@ -93,7 +93,8 @@ Wei is building `wei-wong.ipynb` as her graded submission. `imdb-notebook.ipynb`
 - `EVAL_TEST_CASES` — 15 test cases (title lookup, constraints, follow-up, typo, edge, off-topic, no-match, surname matching, mood recommendation, excluded titles) ✓
 - `_title_hit()`, `evaluate_single_case()`, `run_evaluation_harness()` — evaluation pipeline ✓
 - KPI summary: retrieval rate, first-answer success, compliance, follow-up resolution, fallback rate, latency p50/p95 ✓
-- Part 7 summary + full project summary across all 7 parts ✓
+- Part 7 summary ✓
+- Project summary + future enhancements (separate cell) ✓
 
 ### Part 8: Hybrid Query Understanding — COMPLETE
 **Architecture pivot:** `understand_query()` simplified from full query analyzer to query rewriter only. LLM resolves follow-ups and checks topic relevance; regex stays as source of truth for intent detection (`detect_intent()`) and constraint extraction (`extract_query_constraints()`). This reduces regression risk from prompt drift.
@@ -133,7 +134,7 @@ User Input (typed text or voice → gpt-4o-mini-transcribe)
 | Vector store | FAISS | In-memory, ~2762 movies after dedup |
 | LLM | OpenAI `gpt-4o-mini` (temp=0.2) | Cost-effective, consistent |
 | Framework | LangChain | For notebook submission |
-| UI | Gradio `ChatInterface` | Portfolio-ready demo |
+| UI | Gradio `Blocks` | Portfolio-ready demo |
 
 ### Multi-Agent Design
 
